@@ -1,6 +1,6 @@
 # h5-AebApp-pullupRefresh-PullupLoadMore
 
-[jolicode](https://github.com/jolicode/Alloy-PullToRefresh "jolicode")
+[PullupLoadMore v1 iscroll 5.x](https://github.com/shenbao/h5-WebApp-pulltoRefresh-PullupLoadMore/tree/master/PullupLoadMore%20v1%20iscroll%205.x)
 
 一款基于iscroll5的下拉刷新，上拉加载的的插件。
 
