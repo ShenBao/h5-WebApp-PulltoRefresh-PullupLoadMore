@@ -22,8 +22,7 @@ DOME列表
 
 一款基于iscroll5的下拉刷新，上拉加载的的插件。
 
-## 使用
-
+## 使用 （PS:各个dome用法略有不同，详细看dome示例用法）
 ```html
   <script src="../iscroll-probe.js"></script>
   <script src="../jquery.js"</script>
