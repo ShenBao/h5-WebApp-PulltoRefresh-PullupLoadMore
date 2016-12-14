@@ -1,0 +1,453 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <title>iScroll 5: pull-to-refresh/load example</title>
+
+    <script src="iscroll.js"></script>
+
+    <style type="text/css">
+        html {
+            -ms-touch-action: none;
+        }
+        body {
+            font-size: 12px;
+            font-family: ubuntu, helvetica, arial;
+            overflow: hidden; /* this is important to prevent the whole page to bounce */
+        }
+        body,ul,li {
+            padding: 0;
+            margin: 0;
+            border: 0;
+        }
+
+        #header {
+            position:absolute;
+            z-index:2;
+            top:0; left:0;
+            width:100%;
+            height:45px;
+            line-height:45px;
+            background-color:#d51875;
+            background-image:-webkit-gradient(linear, 0 0, 0 100%, color-stop(0, #fe96c9), color-stop(0.05, #d51875), color-stop(1, #7b0a2e));
+            background-image:-moz-linear-gradient(top, #fe96c9, #d51875 5%, #7b0a2e);
+            background-image:-o-linear-gradient(top, #fe96c9, #d51875 5%, #7b0a2e);
+            padding:0;
+            color:#eee;
+            font-size:20px;
+            text-align:center;
+        }
+
+        #footer {
+            position:absolute;
+            z-index:2;
+            bottom:0; left:0;
+            width:100%;
+            height:48px;
+            background-color:#222;
+            background-image:-webkit-gradient(linear, 0 0, 0 100%, color-stop(0, #999), color-stop(0.02, #666), color-stop(1, #222));
+            background-image:-moz-linear-gradient(top, #999, #666 2%, #222);
+            background-image:-o-linear-gradient(top, #999, #666 2%, #222);
+            padding:0;
+            border-top:1px solid #444;
+        }
+
+        #wrapper {
+            position: absolute;
+            z-index: 1;
+            top: 45px;
+            bottom: 48px;
+            left: 0;
+            width: 100%;
+            background: #ccc;
+            overflow: hidden;
+        }
+
+        .iScroller {
+            position: absolute;
+            z-index: 1;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+            width: 100%;
+            -webkit-transform: translateZ(0);
+            -moz-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            -o-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-text-size-adjust: none;
+            -moz-text-size-adjust: none;
+            -ms-text-size-adjust: none;
+            -o-text-size-adjust: none;
+            text-size-adjust: none;
+        }
+        .iScroller ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            text-align: left;
+        }
+        .iScroller li {
+            padding: 0 10px;
+            height: 40px;
+            line-height: 40px;
+            border-bottom: 1px solid #ccc;
+            border-top: 1px solid #fff;
+            background-color: #fafafa;
+            font-size: 14px;
+        }
+
+        /**
+         *
+         * Pull down/up styles
+         *
+         */
+        .pullDown, .pullUp {
+            background:#fff;
+            height:40px;
+            line-height:40px;
+            padding:5px 10px;
+            border-bottom:1px solid #ccc;
+            font-weight:bold;
+            font-size:14px;
+            color:#888;
+            margin-top:0;
+            white-space: nowrap;
+            font-size:14px;
+        }
+
+        .pullDown.scrolledUp{
+            margin-top:-51px;	/* Should match the totalt height (i.e. height + paddings + borders) of #pullDown set above */
+        }
+        .pullDown .pullDownLabel, .pullUp .pullUpLabel  {
+            margin: 0 5px;
+        }
+        .pullDown .pullDownIcon, .pullUp .pullUpIcon  {
+            display: inline-block;
+            width:40px; height:40px;
+            background:url(pull-icon@2x.png) 0 0 no-repeat;
+            -webkit-background-size:40px 80px; background-size:40px 80px;
+            -webkit-transition-property:-webkit-transform;
+            -webkit-transition-duration:250ms;
+            vertical-align: middle;
+            margin: 0 5px;
+        }
+        .pullDown .pullDownIcon {
+            -webkit-transform:rotate(0deg) translateZ(0);
+        }
+        .pullUp .pullUpIcon  {
+            -webkit-transform:rotate(-180deg) translateZ(0);
+        }
+        .pullDown.flip .pullDownIcon {
+            -webkit-transform:rotate(-180deg) translateZ(0);
+        }
+        .pullUp.flip .pullUpIcon {
+            -webkit-transform:rotate(0deg) translateZ(0);
+        }
+        .pullDown.loading .pullDownIcon, .pullUp.loading .pullUpIcon {
+            background-position:0 100%;
+            -webkit-transform:rotate(0deg) translateZ(0);
+            -webkit-transition-duration:0ms;
+
+            -webkit-animation-name:loading;
+            -webkit-animation-duration:2s;
+            -webkit-animation-iteration-count:infinite;
+            -webkit-animation-timing-function:linear;
+        }
+        @-webkit-keyframes loading {
+            from { -webkit-transform:rotate(0deg) translateZ(0); }
+            to { -webkit-transform:rotate(360deg) translateZ(0); }
+        }
+    </style>
+
+
+
+    <script type="text/javascript">
+
+        // Functions to simulate "refresh" and "load" on pull-down/pull-up
+        var generatedCount=0;
+        function pullDownAction(theScroller) {
+            setTimeout(function () {	// <-- Simulate network congestion, remove setTimeout from production!
+                var el, li, i;
+                el = document.getElementById('thelist');
+
+                for (i=0; i<3; i++) {
+                    li = document.createElement('li');
+                    li.innerText = 'Generated row ' + (++generatedCount);
+                    el.insertBefore(li, el.childNodes[0]);
+                }
+                theScroller.refresh();		// Remember to refresh when contents are loaded (ie: on ajax completion)
+            }, 1000);	// <-- Simulate network congestion, remove setTimeout from production!
+        }
+        function pullUpAction(theScroller) {
+            setTimeout(function () {	// <-- Simulate network congestion, remove setTimeout from production!
+                var el, li, i;
+                el = document.getElementById('thelist');
+
+                for (i=0; i<3; i++) {
+                    li = document.createElement('li');
+                    li.innerText = 'Generated row ' + (++generatedCount);
+                    el.appendChild(li, el.childNodes[0]);
+                }
+                theScroller.refresh();		// Remember to refresh when contents are loaded (ie: on ajax completion)
+            }, 1000);	// <-- Simulate network congestion, remove setTimeout from production!
+        }
+
+
+
+
+        var IScrollPullUpDown = function (wrapperName,iScrollConfig,pullDownActionHandler,pullUpActionHandler) {
+            var iScrollConfig,pullDownActionHandler,pullUpActionHandler,pullDownEl,pullDownOffset,pullUpEl,scrollStartPos;
+            var pullThreshold=5;
+            var me=this;
+
+            function showPullDownElNow(className) {
+                // Shows pullDownEl with a given className
+                pullDownEl.style.transitionDuration='';
+                pullDownEl.style.marginTop='';
+                pullDownEl.className = 'pullDown '+className;
+            }
+            var hidePullDownEl = function (time,refresh) {
+                // Hides pullDownEl
+                pullDownEl.style.transitionDuration=(time>0?time+'ms':'');
+                pullDownEl.style.marginTop='';
+                pullDownEl.className = 'pullDown scrolledUp';
+
+                // If refresh==true, refresh again after time+10 ms to update iScroll's "scroller.offsetHeight" after the pull-down-bar is really hidden...
+                // Don't refresh when the user is still dragging, as this will cause the content to jump (i.e. don't refresh while dragging)
+                if (refresh) setTimeout(function(){me.myScroll.refresh();},time+10);
+            }
+
+            function init() {
+                var wrapperObj = document.querySelector('#'+wrapperName);
+                var scrollerObj = wrapperObj.children[0];
+
+                if (pullDownActionHandler) {
+                    // If a pullDownActionHandler-function is supplied, add a pull-down bar at the top and enable pull-down-to-refresh.
+                    // (if pullDownActionHandler==null this iScroll will have no pull-down-functionality)
+                    pullDownEl=document.createElement('div');
+                    pullDownEl.className='pullDown scrolledUp';
+                    pullDownEl.innerHTML='<span class="pullDownIcon"></span><span class="pullDownLabel">Pull down to refresh...</span>';
+                    scrollerObj.insertBefore(pullDownEl, scrollerObj.firstChild);
+                    pullDownOffset = pullDownEl.offsetHeight;
+                }
+                if (pullUpActionHandler) {
+                    // If a pullUpActionHandler-function is supplied, add a pull-up bar in the bottom and enable pull-up-to-load.
+                    // (if pullUpActionHandler==null this iScroll will have no pull-up-functionality)
+                    pullUpEl=document.createElement('div');
+                    pullUpEl.className='pullUp';
+                    pullUpEl.innerHTML='<span class="pullUpIcon"></span><span class="pullUpLabel">Pull up to load more...</span>';
+                    scrollerObj.appendChild(pullUpEl);
+                }
+
+                me.myScroll = new IScroll(wrapperObj,iScrollConfig);
+
+                me.myScroll.on('refresh',function() {
+                    if ((pullDownEl)&&(pullDownEl.className.match('loading'))) {
+                        pullDownEl.querySelector('.pullDownLabel').innerHTML = 'Pull down to refresh...';
+                        if (this.y>=0) {
+                            // The pull-down-bar is fully visible:
+                            // Hide it with a simple 250ms animation
+                            hidePullDownEl(250,true);
+
+                        } else if (this.y>-pullDownOffset) {
+                            // The pull-down-bar is PARTLY visible:
+                            // Set up a shorter animation to hide it
+
+                            // Firt calculate a new margin-top for pullDownEl that matches the current scroll position
+                            pullDownEl.style.marginTop=this.y+'px';
+
+                            // CSS-trick to force webkit to render/update any CSS-changes immediately: Access the offsetHeight property...
+                            pullDownEl.offsetHeight;
+
+                            // Calculate the animation time (shorter, dependant on the new distance to animate) from here to completely 'scrolledUp' (hidden)
+                            // Needs to be done before adjusting the scroll-positon (if we want to read this.y)
+                            var animTime=(250*(pullDownOffset+this.y)/pullDownOffset);
+
+                            // Set scroll positon to top
+                            // (this is the same as adjusting the scroll postition to match the exact movement pullDownEl made due to the change of margin-top above, so the content will not "jump")
+                            this.scrollTo(0,0,0);
+
+                            // Hide pullDownEl with the new (shorter) animation (and reset the inline style again).
+                            setTimeout(function() {	// Do this in a new thread to avoid glitches in iOS webkit (will make sure the immediate margin-top change above is rendered)...
+                                hidePullDownEl(animTime,true);
+                            },0);
+
+                        } else {
+                            // The pull-down-bar is completely off screen:
+                            // Hide it immediately
+                            hidePullDownEl(0,true);
+                            // And adjust the scroll postition to match the exact movement pullDownEl made due to change of margin-top above, so the content will not "jump"
+                            this.scrollBy(0,pullDownOffset,0);
+                        }
+                    }
+                    if ((pullUpEl)&&(pullUpEl.className.match('loading'))) {
+                        pullUpEl.className = 'pullUp';
+                        pullUpEl.querySelector('.pullUpLabel').innerHTML = 'Pull up to load more...';
+                    }
+                });
+
+                me.myScroll.on('scrollStart',function() {
+                    scrollStartPos=this.y; // Store the scroll starting point to be able to track movement in 'scroll' below
+                });
+
+                me.myScroll.on('scroll',function() {
+                    if (pullDownEl||pullUpEl) {
+                        if((scrollStartPos==0)&&(this.y==0)) {
+                            // 'scroll' called, but scroller is not moving!
+                            // Probably because the content inside wrapper is small and fits the screen, so drag/scroll is disabled by iScroll
+
+                            // Fix this by a hack: Setting "myScroll.hasVerticalScroll=true" tricks iScroll to believe
+                            // that there is a vertical scrollbar, and iScroll will enable dragging/scrolling again...
+                            this.hasVerticalScroll=true;
+
+                            // Set scrollStartPos to -1000 to be able to detect this state later...
+                            scrollStartPos=-1000;
+                        } else if ((scrollStartPos==-1000) &&
+                                (((!pullUpEl)&&(!pullDownEl.className.match('flip'))&&(this.y<0)) ||
+                                ((!pullDownEl)&&(!pullUpEl.className.match('flip'))&&(this.y>0)))) {
+                            // Scroller was not moving at first (and the trick above was applied), but now it's moving in the wrong direction.
+                            // I.e. the user is either scrolling up while having no "pull-up-bar",
+                            // or scrolling down while having no "pull-down-bar" => Disable the trick again and reset values...
+                            this.hasVerticalScroll=false;
+                            scrollStartPos=0;
+                            this.scrollBy(0,-this.y, 0);	// Adjust scrolling position to undo this "invalid" movement
+                        }
+                    }
+
+                    if (pullDownEl) {
+                        if (this.y > pullDownOffset+pullThreshold && !pullDownEl.className.match('flip')) {
+                            showPullDownElNow('flip');
+                            this.scrollBy(0,-pullDownOffset, 0);	// Adjust scrolling position to match the change in pullDownEl's margin-top
+                            pullDownEl.querySelector('.pullDownLabel').innerHTML = 'Release to refresh...';
+                        } else if (this.y < 0 && pullDownEl.className.match('flip')) { // User changes his mind...
+                            hidePullDownEl(0,false);
+                            this.scrollBy(0,pullDownOffset, 0);	// Adjust scrolling position to match the change in pullDownEl's margin-top
+                            pullDownEl.querySelector('.pullDownLabel').innerHTML = 'Pull down to refresh...';
+                        }
+                    }
+                    if (pullUpEl) {
+                        if (this.y < (this.maxScrollY - pullThreshold) && !pullUpEl.className.match('flip')) {
+                            pullUpEl.className = 'pullUp flip';
+                            pullUpEl.querySelector('.pullUpLabel').innerHTML = 'Release to load more...';
+                        } else if (this.y > (this.maxScrollY + pullThreshold) && pullUpEl.className.match('flip')) {
+                            pullUpEl.className = 'pullUp';
+                            pullUpEl.querySelector('.pullUpLabel').innerHTML = 'Pull up to load more...';
+                        }
+                    }
+                });
+
+                me.myScroll.on('scrollEnd',function() {
+                    if ((pullDownEl)&&(pullDownEl.className.match('flip'))) {
+                        showPullDownElNow('loading');
+                        pullDownEl.querySelector('.pullDownLabel').innerHTML = 'Loading...';
+                        pullDownActionHandler(this);	// Execute custom function (ajax call?)
+                    }
+                    if ((pullUpEl)&&(pullUpEl.className.match('flip'))) {
+                        pullUpEl.className = 'pullUp loading';
+                        pullUpEl.querySelector('.pullUpLabel').innerHTML = 'Loading...';
+                        pullUpActionHandler(this);	// Execute custom function (ajax call?)
+                    }
+                    if (scrollStartPos=-1000) {
+                        // If scrollStartPos=-1000: Recalculate the true value of "hasVerticalScroll" as it may have been
+                        // altered in 'scroll' to enable pull-to-refresh/load when the content fits the screen...
+                        this.hasVerticalScroll = this.options.scrollY && this.maxScrollY < 0;
+                    }
+                });
+
+            }
+            window.addEventListener('load', function() {init()}, false);
+        };
+
+
+
+        var scroller1 = new IScrollPullUpDown('wrapper',{
+            probeType:2,
+            bounceTime: 250,
+            bounceEasing: 'quadratic',
+            mouseWheel:false,
+            scrollbars:true,
+            fadeScrollbars:true,
+            interactiveScrollbars:false
+        },pullDownAction,pullUpAction);
+
+
+
+        document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
+    </script>
+</head>
+
+<body>
+
+<div id="header">iScroll 5</div>
+
+<div id="wrapper">
+    <div class="iScroller">
+        <ul id="thelist">
+            <li>Pretty row 1</li>
+            <li>Pretty row 2</li>
+            <li>Pretty row 3</li>
+            <li>Pretty row 4</li>
+            <li>Pretty row 5</li>
+            <li>Pretty row 6</li>
+            <li>Pretty row 7</li>
+            <li>Pretty row 8</li>
+            <li>Pretty row 9</li>
+            <li>Pretty row 10</li>
+            <li>Pretty row 11</li>
+            <li>Pretty row 12</li>
+            <li>Pretty row 13</li>
+            <li>Pretty row 14</li>
+            <li>Pretty row 15</li>
+            <li>Pretty row 16</li>
+            <li>Pretty row 17</li>
+            <li>Pretty row 18</li>
+            <li>Pretty row 19</li>
+            <li>Pretty row 20</li>
+            <li>Pretty row 21</li>
+            <li>Pretty row 22</li>
+            <li>Pretty row 23</li>
+            <li>Pretty row 24</li>
+            <li>Pretty row 25</li>
+            <li>Pretty row 26</li>
+            <li>Pretty row 27</li>
+            <li>Pretty row 28</li>
+            <li>Pretty row 29</li>
+            <li>Pretty row 30</li>
+            <li>Pretty row 31</li>
+            <li>Pretty row 32</li>
+            <li>Pretty row 33</li>
+            <li>Pretty row 34</li>
+            <li>Pretty row 35</li>
+            <li>Pretty row 36</li>
+            <li>Pretty row 37</li>
+            <li>Pretty row 38</li>
+            <li>Pretty row 39</li>
+            <li>Pretty row 40</li>
+            <li>Pretty row 41</li>
+            <li>Pretty row 42</li>
+            <li>Pretty row 43</li>
+            <li>Pretty row 44</li>
+            <li>Pretty row 45</li>
+            <li>Pretty row 46</li>
+            <li>Pretty row 47</li>
+            <li>Pretty row 48</li>
+            <li>Pretty row 49</li>
+            <li>Pretty row 50</li>
+        </ul>
+    </div>
+</div>
+
+<div id="footer"></div>
+
+</body>
+</html>

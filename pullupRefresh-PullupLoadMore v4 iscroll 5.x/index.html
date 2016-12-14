@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!-- saved from url=(0080)http://www.zhangyunling.com/study/slideUpDownRefresh/version_1/iscroll-test.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+<title>iscroll5下拉刷新</title>
+<link rel="stylesheet" type="text/css" href="lib/bootstrap.css">
+<link rel="stylesheet" type="text/css" href="lib/bootstrap-theme.css">
+<link rel="stylesheet" type="text/css" href="lib/iscroll.css">
+</head>
+<body onload="loaded()">
+<div id="wrapper">
+	<div id="scroller">
+		<div id="scroller-pullDown">
+			<span id="down-icon" class="icon-double-angle-down pull-down-icon"></span>
+			<span id="pullDown-msg" class="pull-down-msg">下拉刷新</span>
+		</div>
+		<div id="scroller-content">
+			<ul>
+				<li>Pretty row 1</li>
+				<li>Pretty row 2</li>
+				<li>Pretty row 3</li>
+				<li>Pretty row 4</li>
+				<li>Pretty row 5</li>
+				<li>Pretty row 6</li>
+				<li>Pretty row 7</li>
+				<li>Pretty row 8</li>
+				<li>Pretty row 9</li>
+				<li>Pretty row 10</li>
+				<li>Pretty row 11</li>
+				<li>Pretty row 12</li>
+				<li>Pretty row 13</li>
+				<li>Pretty row 14</li>
+				<li>Pretty row 15</li>
+				<li>Pretty row 16</li>
+				<li>Pretty row 17</li>
+				<li>Pretty row 18</li>
+				<li>Pretty row 19</li>
+				<li>Pretty row 20</li>
+				<li>Pretty row 21</li>
+				<li>Pretty row 22</li>
+				<li>Pretty row 23</li>
+				<li>Pretty row 24</li>
+				<li>Pretty row 25</li>
+				<li>Pretty row 26</li>
+				<li>Pretty row 27</li>
+				<li>Pretty row 28</li>
+				<li>Pretty row 29</li>
+				<li>Pretty row 30</li>
+			</ul>
+		</div>
+		<div id="scroller-pullUp">
+			<span id="up-icon" class="icon-double-angle-up pull-up-icon"></span>
+			<span id="pullUp-msg" class="pull-up-msg">上拉刷新</span>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript" src="lib/jquery.min.js"></script>
+<script type="text/javascript" src="lib/iscroll.js"></script>
+<script type="text/javascript">
+function loaded () {
+	var myScroll,
+		upIcon = $("#up-icon"),
+		downIcon = $("#down-icon"),
+		defaults=$("#scroller-content li").length,
+		
+	myScroll = new IScroll('#wrapper', { probeType: 3, mouseWheel: true });	
+	myScroll.on("scroll",function(){
+		var y = this.y,
+			maxY = this.maxScrollY - y,
+			downHasClass = downIcon.hasClass("reverse_icon"),
+			upHasClass = upIcon.hasClass("reverse_icon");	
+		if(y >= 40){
+			!downHasClass && downIcon.addClass("reverse_icon");
+			return "";
+		}else if(y < 40 && y > 0){
+			downHasClass && downIcon.removeClass("reverse_icon");
+			return "";
+		}		
+		if(maxY >= 40){
+			!upHasClass && upIcon.addClass("reverse_icon");
+			return "";
+		}else if(maxY < 40 && maxY >=0){
+			upHasClass && upIcon.removeClass("reverse_icon");
+			return "";
+		}
+	});	
+	myScroll.on("slideDown",function(){
+		if(this.y > 40){
+			slideDown();	//下拉刷新
+			console.log('slideDown')
+			upIcon.removeClass("reverse_icon")
+		}
+	});
+	
+	myScroll.on("slideUp",function(){
+		if(this.maxScrollY - this.y > 40){
+			slideUp(10);	//上拉加载更多
+			console.log('slideUp')					
+			upIcon.removeClass("reverse_icon")
+		}
+	});
+
+	function slideDown(){
+		//重新读取数据
+	}
+
+	function slideUp(num){
+		//num每次下拉加载的条数
+		var html="";
+		for(var i=0;i<num;i++){
+			html+='<li>Pretty row '+(defaults+i)+'</li>'
+		}
+		$("#scroller-content ul").append(html);
+		myScroll.refresh();		//改变dom结构后需要重新计算高度
+		defaults=defaults+num;
+	}
+}
+</script>
+</body></html>

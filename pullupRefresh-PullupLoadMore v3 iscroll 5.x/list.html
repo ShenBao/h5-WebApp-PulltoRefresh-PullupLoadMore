@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+<script type="text/javascript" src="jquery-2.0.3.min.js"></script>
+<script type="text/javascript" src="iscroll.js"></script>
+<script type="text/javascript" src="iscrollAssist.js"></script>
+<script type="text/javascript" >
+	(function($){
+		$(function(){
+			var pulldownAction = function(){
+				var temp = '';
+				for(var i=1;i<16;i++){
+					temp += '<dd>'+i+'</dd>';
+				}
+				$('#dataArea').html(temp);
+				this.refresh();
+				console.log("下拉执行逻辑");
+			};
+			var pullupAction = function(){
+				
+				var temp = '';
+				for(var i=1;i<16;i++){
+					temp += '<dd>'+i+'</dd>';
+				}
+				$('#dataArea').append(temp);
+				this.refresh();
+				console.log("上拉执行逻辑");
+			};
+			var iscrollObj = iscrollAssist.newVerScrollForPull($('#wrapper'),pulldownAction,pullupAction);
+			iscrollObj.refresh();
+		});
+	})(jQuery);
+</script>
+<style>
+/****** 下拉刷新、上拉加载更多的样式********/
+#pulldown, #pullup {
+	background:#fff;
+	height:40px;
+	line-height:40px;
+	padding:5px 10px;
+	border-bottom:1px solid #ccc;
+	font-weight:bold;
+	font-size:14px;
+	color:#888;
+}
+
+#pulldown .pulldown-icon, #pullup .pullup-icon  {
+	display:block; float:left;
+	width:40px; height:40px;
+	background:url(images/pull-icon@2x.png) 0 0 no-repeat;
+	-webkit-background-size:40px 80px; background-size:40px 80px;
+	-webkit-transition-property:-webkit-transform;
+	-webkit-transition-duration:250ms;	
+}
+
+#pulldown .pulldown-icon {
+	-webkit-transform:rotate(0deg) translateZ(0);
+}
+
+#pullup .pullup-icon  {
+	-webkit-transform:rotate(-180deg) translateZ(0);
+}
+
+#pulldown.flip .pulldown-icon {
+	-webkit-transform:rotate(-180deg) translateZ(0);
+}
+
+#pullup.flip .pullup-icon {
+	-webkit-transform:rotate(0deg) translateZ(0);
+}
+
+#pulldown.loading .pulldown-icon, #pullup.loading .pullup-icon {
+	background-position:0 100%;
+	-webkit-transform:rotate(0deg) translateZ(0);
+	-webkit-transition-duration:0ms;
+
+	-webkit-animation-name:loading;
+	-webkit-animation-duration:2s;
+	-webkit-animation-iteration-count:infinite;
+	-webkit-animation-timing-function:linear;
+}
+
+
+
+@-webkit-keyframes loading {
+	from { -webkit-transform:rotate(0deg) translateZ(0); }
+	to { -webkit-transform:rotate(360deg) translateZ(0); }
+}
+dd{
+	border-bottom:1px solid #ccc;
+	height:50px;
+	line-height:50px;
+	margin-left: 0px;
+	text-align:center;
+}
+</style>
+</head>
+<body style="overflow-y:hidden;position:absolute;left:0em;right:0em;top:0em;bottom:0em;margin:0em">
+<div id="wrapper" style="position:absolute;width:100%;height:100%;overflow:hidden">
+	<dl style="-webkit-margin-before:0em;">
+
+		<div id="pulldown" >
+			<span class="pulldown-icon"></span><span id="pulldown-label"></span>
+		</div>
+		
+		<div id="dataArea">
+			<dd>1</dd>
+			<dd>2</dd>
+			<dd>3</dd>
+			<dd>4</dd>
+			<dd>5</dd>
+			<dd>6</dd>
+			<dd>7</dd>
+			<dd>8</dd>
+			<dd>9</dd>
+			<dd>10</dd>
+			<dd>11</dd>
+			<dd>12</dd>
+			<dd>13</dd>
+			<dd>14</dd>
+			<dd>15</dd>
+		</div>
+		
+		<div id="pullup" >
+			<span class="pullup-icon"></span><span id="pullup-label"></span>
+		</div>
+		
+</dl>
+</div>
+</body>
+</html>
