@@ -1,5 +1,5 @@
 # h5-AebApp-pullupRefresh-PullupLoadMore
-h5-AebApp-pullupRefresh-PullupLoadMore
+
 # pull-to-refresh
 
 一款基于iscroll5的下拉刷新，上拉加载的的插件。
