@@ -1,0 +1,10 @@
+{
+    "name": "PullRefreshLoad",
+    "version": "1.0.0",
+    "description": "轻量级下拉刷新/上拉加载",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ouch1985/pull-refresh-load.git"
+    },
+    "author": "ouchuanyu@163.com"
+}
